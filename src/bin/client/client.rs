@@ -21,7 +21,11 @@ macro_rules! input {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let stream = TcpStream::connect("localhost:8080").await?;
+    let ip = input!("Enter the IP address of the server: ");
+    println!("Connecting to {}", ip);
+
+
+    let stream = TcpStream::connect(ip).await?;
     let (read_half, mut write_half) = tokio::io::split(stream);
 
     let mut reader = BufReader::new(read_half);
