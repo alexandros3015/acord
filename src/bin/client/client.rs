@@ -7,7 +7,6 @@ use std::{io::{self, Write}};
 use acord::{derive_key_with_salt, encrypt, decrypt};
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 
-
   macro_rules! prompt {
     ($fmt:expr $(, $arg:expr )* ) => {{
       print!($fmt $(, $arg )*);
@@ -41,17 +40,48 @@ use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 
 
     tokio::spawn(async move {
-      while let Ok(Some(line)) = server_lines.next_line().await {
-        let (ciphertext, nonce) = line.split_once(", ").unwrap();
-        let ciphertext: Vec<u8> = B64.decode(ciphertext).unwrap();
-        let nonce: Vec<u8> = B64.decode(nonce).unwrap();
+      let mut warned_bad_key = false;
+      let mut bad_count = 0u32;
 
-        let entered_line = decrypt(&key_rx, &nonce, &ciphertext).unwrap();
+        while let Ok(Some(line)) = server_lines.next_line().await {
+          let line = line.trim();
 
-        println!("\r<< {}", String::from_utf8(entered_line).unwrap());
-        print!("you> ");
-        let _ = io::stdout().flush();
-      }
+          if let Some((ct_b64, nonce_64)) = line.split_once(',') {
+            let nonce = match B64.decode(nonce_64.trim()) { Ok(n) => n, Err(_) => { continue; } };
+            let ct = match B64.decode(ct_b64.trim()) { Ok(c) => c, Err(_) => { continue; } };
+
+            if nonce.len() != 12 {
+              eprint!("\r<< [bad nonce]");
+              continue;
+            }
+
+            match decrypt(&key_rx, &nonce, &ct) {
+              Ok(plaintext) => {
+                bad_count = 0;
+                if let Ok(text) = String::from_utf8(plaintext) {
+                  println!("\r<< {}", text);
+                } else {
+                  eprintln!("\r<< [non-utf8]");
+                }
+                print!("you> ");
+                let _ = io::stdout().flush();
+              }
+
+              Err(_) => {
+                bad_count += 1;
+                if !warned_bad_key {
+                  eprintln!("\r<< Could not decrypt message");
+                  eprintln!("\r<< Try again with the correct key");
+                  warned_bad_key = true;
+                } else if bad_count % 20 == 0 {
+                  eprintln!("\r<< [Tell whoever is sending you messages to calm down]");
+                }
+              }
+              
+            }
+          }
+        }
+      
       eprintln!("\n[-] server closed connection");
     });
   

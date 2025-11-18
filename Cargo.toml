@@ -22,4 +22,5 @@ anyhow = "1.0.98"
 argon2 = "0.5.3"
 base64 = "0.22.1"
 rand = "0.9.1"
+rustyline = "17.0.2"
 tokio = { version = "1.44.2", features = ["full"] }
