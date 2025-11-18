@@ -11,6 +11,15 @@ path = "src/bin/server/server.rs"
 name = "client"
 path = "src/bin/client/client.rs"
 
+[[bin]]
+name = "testing"
+path = "src/bin/testing/testing.rs"
 
 [dependencies]
+aead = "0.5.2"
+aes-gcm = "0.10.3"
+anyhow = "1.0.98"
+argon2 = "0.5.3"
+base64 = "0.22.1"
+rand = "0.9.1"
 tokio = { version = "1.44.2", features = ["full"] }

@@ -3,7 +3,9 @@ use tokio::{
     net::TcpListener,
     sync::broadcast,
   };
-  use std::io::{self, Write};
+  use std::{io::{self, Write}, vec};
+  use rand::RngCore;
+  use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
   
   macro_rules! prompt {
     ($fmt:expr $(, $arg:expr )* ) => {{
@@ -22,7 +24,11 @@ use tokio::{
 
     let listener = TcpListener::bind(&ip).await?;
     println!("listening on {}", ip);
- 
+    
+    let mut salt = vec![0u8; 32];
+    rand::rng().fill_bytes(&mut salt);
+    let salt = B64.encode(salt);
+
     let (tx, _) = broadcast::channel::<String>(100);
   
     loop {
@@ -34,6 +40,13 @@ use tokio::{
   
       let (read_half, mut write_half) = tokio::io::split(socket);
       let mut client_lines = BufReader::new(read_half).lines();
+
+      let salt_line = format!("SALT,{}\n", salt);
+      if let Err(e) = write_half.write_all(salt_line.as_bytes()).await {
+        eprintln!("error writing salt to {}: {}", peer, e);
+        continue;
+      }
+      let _ = write_half.flush().await;
  
       tokio::spawn(async move {
         loop {
