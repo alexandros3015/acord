@@ -18,10 +18,8 @@ path = "src/bin/testing/testing.rs"
 [dependencies]
 aead = "0.5.2"
 aes-gcm = "0.10.3"
-anyhow = "1.0.98"
 argon2 = "0.5.3"
 base64 = "0.22.1"
 crossterm = "0.29.0"
 rand = "0.9.1"
-rustyline = "17.0.2"
 tokio = { version = "1.44.2", features = ["full"] }
