@@ -1,6 +1,5 @@
 use std::vec;
 
-use anyhow::{Result, anyhow};
 use argon2::Argon2;
 use argon2::password_hash::SaltString;
 use aes_gcm::{Aes256Gcm, Nonce};
