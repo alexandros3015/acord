@@ -35,8 +35,7 @@ pub fn encrypt(key: &[u8], plaintext: &[u8])
     -> Result<(Vec<u8>, Vec<u8>), AeadError>
 {
     
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .map_err(|_| AeadError)?;
+    let cipher = Aes256Gcm::new_from_slice(key).expect("AES256 key must be 32 bytes");
 
     
     let mut nonce_bytes = [0u8; 12];
@@ -61,8 +60,7 @@ pub fn decrypt(
         .expect("AES256 key must be 32 bytes");
 
     let pt = cipher
-        .decrypt(Nonce::from_slice(nonce_bytes), ciphertext)
-        .map_err(|_| AeadError)?;
+        .decrypt(Nonce::from_slice(nonce_bytes), ciphertext)?;
 
     Ok(pt)
 }
