@@ -5,6 +5,7 @@ use tokio::{
 
 use acord::{derive_key_with_salt, encrypt, decrypt};
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
+use std::sync::{Arc, Mutex};
 
 use crossterm::{
     cursor::{MoveToColumn},
