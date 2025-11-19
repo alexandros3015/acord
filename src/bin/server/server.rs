@@ -3,10 +3,11 @@ use tokio::{
     net::TcpListener,
     sync::broadcast,
   };
-  use std::{io::{self, Write}, vec};
-  use rand::RngCore;
+  use std::{io::{self, Write}};
   use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
-  
+  use argon2::password_hash::rand_core::OsRng;
+  use argon2::password_hash::SaltString;
+
   macro_rules! prompt {
     ($fmt:expr $(, $arg:expr )* ) => {{
       print!($fmt $(, $arg )*);
@@ -25,9 +26,9 @@ use tokio::{
     let listener = TcpListener::bind(&ip).await?;
     println!("listening on {}", ip);
     
-    let mut salt = vec![0u8; 32];
-    rand::rng().fill_bytes(&mut salt);
-    let salt = B64.encode(salt);
+    let salt = SaltString::generate(&mut OsRng);
+    
+    let salt = B64.encode(salt.as_str().as_bytes());
 
     let (tx, _) = broadcast::channel::<String>(100);
   
