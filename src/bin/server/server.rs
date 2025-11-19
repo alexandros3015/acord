@@ -5,8 +5,7 @@ use tokio::{
   };
   use std::{io::{self, Write}};
   use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
-  use argon2::password_hash::rand_core::OsRng;
-  use argon2::password_hash::SaltString;
+  use rand_core::{TryRngCore, OsRng};
 
   macro_rules! prompt {
     ($fmt:expr $(, $arg:expr )* ) => {{
@@ -26,9 +25,9 @@ use tokio::{
     let listener = TcpListener::bind(&ip).await?;
     println!("listening on {}", ip);
     
-    let salt = SaltString::generate(&mut OsRng);
-    
-    let salt = B64.encode(salt.as_str().as_bytes());
+    let mut salt = [0u8; 16];
+
+    OsRng.try_fill_bytes(&mut salt).expect("Error filling in bytes");
 
     let (tx, _) = broadcast::channel::<String>(100);
   
@@ -42,7 +41,7 @@ use tokio::{
       let (read_half, mut write_half) = tokio::io::split(socket);
       let mut client_lines = BufReader::new(read_half).lines();
 
-      let salt_line = format!("SALT,{}\n", salt);
+      let salt_line = format!("SALT,{}\n", B64.encode(&salt));
       if let Err(e) = write_half.write_all(salt_line.as_bytes()).await {
         eprintln!("error writing salt to {}: {}", peer, e);
         continue;

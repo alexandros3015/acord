@@ -2,7 +2,6 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::TcpStream,
 };
-use std::sync::{Arc, Mutex};
 
 use acord::{derive_key_with_salt, encrypt, decrypt};
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
@@ -15,11 +14,14 @@ use crossterm::{
 };
 use std::io::{self, Write};
 
+use zeroize::Zeroize;
+
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = prompt("server addr> ");
     let nick = prompt("name> ");
-    let pass = prompt("key> ");
+    let mut pass = prompt("key> ");
 
     println!("connecting to {}", addr);
     let stream = TcpStream::connect(addr).await?;
@@ -29,8 +31,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let salt_line = server_lines.next_line().await?.ok_or("no salt")?;
     let salt = parse_salt(&salt_line)?;
+
     let key = derive_key_with_salt(pass.as_bytes(), &salt).expect("Deriving key with salt faliure");
     let key_rx = key.clone();
+
+    pass.zeroize();
 
     let input_buf = Arc::new(Mutex::new(String::new()));
     let input_buf_rx = Arc::clone(&input_buf);
