@@ -12,6 +12,7 @@ dependencies = [
  "base64",
  "crossterm",
  "rand",
+ "rand_core 0.9.3",
  "tokio",
 ]
 

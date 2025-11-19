@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let salt_line = server_lines.next_line().await?.ok_or("no salt")?;
     let salt = parse_salt(&salt_line)?;
-    let key = derive_key_with_salt(pass.as_bytes(), &salt);
+    let key = derive_key_with_salt(pass.as_bytes(), &salt).expect("Deriving key with salt faliure");
     let key_rx = key.clone();
 
     let input_buf = Arc::new(Mutex::new(String::new()));
